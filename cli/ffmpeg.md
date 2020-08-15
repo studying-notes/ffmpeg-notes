@@ -4,15 +4,21 @@
   - [命令基本格式及参数](#命令基本格式及参数)
     - [FFmpeg 命令参数](#ffmpeg-命令参数)
   - [分解与复用](#分解与复用)
+    - [复制流](#复制流)
     - [显示流信息](#显示流信息)
     - [分离视频流/音频流](#分离视频流音频流)
     - [文件格式转换](#文件格式转换)
       - [编码格式控制](#编码格式控制)
       - [维持源文件的质量](#维持源文件的质量)
     - [音视频合成](#音视频合成)
-      - [保留原声，添加背景音乐](#保留原声添加背景音乐)
-      - [不保留原声，替换音频](#不保留原声替换音频)
-  - [设置视频的屏幕显式比例](#设置视频的屏幕显式比例)
+      - [无声视频和音频合成](#无声视频和音频合成)
+      - [替换有声视频中的音频](#替换有声视频中的音频)
+      - [保留视频原声，添加背景音乐](#保留视频原声添加背景音乐)
+  - [更改文件输入输出属性](#更改文件输入输出属性)
+    - [设置视频的屏幕显式比例](#设置视频的屏幕显式比例)
+    - [设置输出文件比特率](#设置输出文件比特率)
+    - [强制输出文件的帧频](#强制输出文件的帧频)
+    - [强制输入文件的帧频](#强制输入文件的帧频)
   - [处理原始数据](#处理原始数据)
     - [提取 YUV 数据](#提取-yuv-数据)
     - [YUV 转 H264](#yuv-转-h264)
@@ -26,6 +32,11 @@
       - [视频裁剪](#视频裁剪)
       - [压缩音视频文件](#压缩音视频文件)
       - [音视频变速](#音视频变速)
+      - [调节音量](#调节音量)
+        - [倍数调节](#倍数调节)
+        - [分贝调节](#分贝调节)
+    - [复杂滤镜](#复杂滤镜)
+      - [倍速播放](#倍速播放)
       - [对称视频](#对称视频)
       - [画中画](#画中画)
       - [录制画中画](#录制画中画)
@@ -48,7 +59,7 @@
       - [彩色底片](#彩色底片)
   - [音视频的拼接与裁剪](#音视频的拼接与裁剪)
     - [裁剪](#裁剪)
-      - [截取音乐片段](#截取音乐片段)
+      - [截取音频片段](#截取音频片段)
       - [截取视频片段](#截取视频片段)
       - [将视频分为多个部分](#将视频分为多个部分)
     - [视频拼接](#视频拼接)
@@ -56,8 +67,8 @@
       - [方法二](#方法二)
     - [音频拼接](#音频拼接)
     - [音频混音](#音频混音)
-      - [方法一](#方法一-1)
-      - [方法二](#方法二-1)
+      - [amerge](#amerge)
+      - [amix](#amix)
     - [HLS 切片](#hls-切片)
   - [视频图像互转](#视频图像互转)
     - [视频转 JPEG](#视频转-jpeg)
@@ -74,8 +85,8 @@
 ## 命令基本格式及参数
 
 ```shell
-ffmpeg [global_options] {[input_file_options] -i input_url} ...
-						 {[output_file_options] output_url} ...
+ffmpeg [global_options] {[input_file_options] -i input_file} ...
+						 {[output_file_options] output_file} ...
 ```
 
 通过 `-i` 选项读取输任意数量的输入文件，可以是常规文件，管道，网络流，抓取设备等，并写入任意数量的输出文件。
@@ -84,11 +95,15 @@ ffmpeg [global_options] {[input_file_options] -i input_url} ...
 
 要引用选项中的输入文件，必须使用它们的索引（从 0 开始）。 例如，第一个输入文件是 0，第二个输入文件是 1，等等。类似地，文件内的流被它们的索引引用。 例如， `2:3` 是指第三个输入文件中的第四个流。
 
+避免混合输入和输出文件，首先指定所有输入文件，然后是所有的输出文件。也不能混用属于不同的文件的选项，所有**选项仅适用于下一个输入或输出文件**，之后选项将被重置。
+
 ### FFmpeg 命令参数
 
 详细内容见独立[文档](args.md)。
 
 ## 分解与复用
+
+### 复制流
 
 流拷贝是通过将 `copy` 参数提供给 `-codec` 选项来选择流的模式。它使得 ffmpeg 省略了指定流的解码和编码步骤，所以它只能进行多路分解和多路复用。 这对于更改容器格式或修改容器级元数据很有用。 在这种情况下，上图将简化为：
 
@@ -100,12 +115,12 @@ ffmpeg [global_options] {[input_file_options] -i input_url} ...
 |_______|            |______________|          |________|
 ```
 
-由于没有解码或编码，速度非常快，没有质量损失。 但是，由于许多因素，在某些情况下可能无法正常工作。 应用过滤器显然也是不可能的，因为过滤器只能处理未压缩的数据。
+由于没有解码或编码，速度非常快，没有质量损失。 但是，由于许多因素，在某些情况下可能无法正常工作。 应用过滤器显然也是不可能的，因为滤镜仅能作用在未压缩的数据上。
 
 ### 显示流信息
 
 ```shell
-ffmpeg -i  input.mp4
+ffmpeg -i  video.mp4
 ```
 
 ```
@@ -120,10 +135,15 @@ Stream #0:1(eng): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 1
 
 ```shell
 # 分离视频流
-ffmpeg -i  input.mp4 -vcodec -an copy output.mp4
+ffmpeg -i  input.mp4 -vcodec copy -an output.mp4
 
 # 分离音频流
-ffmpeg -i  input.mp4 -acodec -vn copy output.m4a
+ffmpeg -i  video.mp4 -acodec copy -vn audio.m4a
+
+# AAC 格式
+ffmpeg -i  video.mp4 -acodec aac -vn audio.aac
+ffmpeg -i  video.mp4 -vn audio.aac
+ffmpeg -i  video.mp4 audio.aac
 ```
 
 - `-vn` : 不处理视频
@@ -140,6 +160,15 @@ ffmpeg -i  input.mp4 -acodec -vn copy output.m4a
 ```shell
 # 只拷贝，不做编解码，只是改了封装格式
 ffmpeg -i out.mp4 -vcodec copy -acodec copy out.flv
+
+# 音频格式转换
+ffmpeg -i audio.m4a -acodec aac audio.aac
+
+# 暴力转换
+ffmpeg -i audio.m4a audio.mp3
+
+ffmpeg -i 1.mp3 1.aac
+ffmpeg -i 2.aac 2.m4a
 ```
 
 #### 编码格式控制
@@ -158,40 +187,55 @@ ffmpeg -i demo.flv -qscale 0 demo.mp4
 
 ### 音视频合成
 
+#### 无声视频和音频合成
+
 ```shell
-ffmpeg -i out.h264 -i out.aac -vcodec copy -acodec copy out.mp4
+ffmpeg -y -i video_noaudio.mp4 -i audio.mp3  -shortest -vcodec copy -acodec copy av_merge.mp4
 ```
 
-#### 保留原声，添加背景音乐
+#### 替换有声视频中的音频
+
+```shell
+ffmpeg -y -i video.mp4 -i audio.mp3  -shortest -c:v copy -c:a copy -map 0:v:0 -map 1:a:0 av_merge.mp4
+```
+
+#### 保留视频原声，添加背景音乐
 
 ```shell
 ffmpeg -i  input.mp3 -i  input.mp4 -threads 2 -filter_complex amix=inputs=2:duration=first:dropout_transition=0 merge.mp4 -y
 ```
 
-#### 不保留原声，替换音频
+> 音频和视频输入流的命令顺序对视频合成有影响，顺序交换可能造成跳帧，另外还有可能声音错位，因为视频中的 AAC 音频流长度不一定和视频长度相同，开头可能是空白，会导致缩进和背景音乐混音，造成声音错位。
 
- input. 去掉源文件里的音频
+## 更改文件输入输出属性
 
-```shell
-ffmpeg -i  input.mp4 -vcodec copy -an 1_an.mp4
-```
-
-- `-vcodec copy` 对源视频不解码，直接拷贝到目标文件
-- `-an` 将源文件里的音频丢弃
-
-2. 将这个视频文件与一个音频文件合成
-
-```shell
-ffmpeg -i 1_an.mp4 -ss 30 -t 52 -i  input.mp3 -vcodec copy 1_merge.mp4
-```
-
-## 设置视频的屏幕显式比例
+### 设置视频的屏幕显式比例
 
 ```shell
 ffmpeg -i start.mp4 -aspect 16:9 out-start16_9.mp4
 ```
 
 - -aspect : 设置视频文件的屏幕显式比例，常用的比例: 16:9, 4:3, 16:10, 2.21:1, 2.35:1, 5:4, 2.39:1
+
+### 设置输出文件比特率
+
+```shell
+ffmpeg -i input.avi -b：V 64K -bufsize 64K output.avi
+```
+
+### 强制输出文件的帧频
+
+```shell
+ffmpeg -i input.avi -r 24 output.avi
+```
+
+### 强制输入文件的帧频
+
+仅对原始格式有效，以 1 FPS 读入文件，以每秒 24 帧输出：
+
+```shell
+ffmpeg -r 1 -i input.m2v -r 24 output.avi
+```
 
 ## 处理原始数据
 
@@ -341,7 +385,31 @@ ffmpeg -i start.mp4 -filter:v setpts=0.5*PTS slow-start.mp4
 # audio 变速
 ffmpeg -i input.mp3 -filter:a atempo=2.0 output.mp3
 ```
+
+#### 调节音量
+
+##### 倍数调节
+
 ```shell
+# 调节为当前音量的一半
+ffmpeg -i input.wav -filter:a "volume=0.5" output.wav
+
+# 调节为当前音量的 1.5 倍
+ffmpeg -i input.wav -filter:a "volume=1.5" output.wav
+
+# 调节为静音
+ffmpeg -i input.wav -filter:a "volume=0" output.wav
+```
+
+##### 分贝调节
+
+```shell
+# 增加 10dB
+ffmpeg -i input.wav -filter:a "volume=10dB" output.wav
+
+# 减少 5dB
+ffmpeg -i input.wav -filter:a "volume=-5dB" output.wav
+```
 
 ### 复杂滤镜
 
@@ -510,7 +578,7 @@ curves = ‘none’‘color_negative’
 
 ### 裁剪
 
-#### 截取音乐片段
+#### 截取音频片段
 
 ```shell
 ffmpeg -i  input.mp3 -ss 00:00:01 -t 00:00:30 -acodec copy 1_part.mp3
@@ -520,10 +588,13 @@ ffmpeg -i  input.mp3 -ss 00:00:01 -t 00:00:30 -acodec copy 1_part.mp3
 
 ```shell
 ffmpeg -i out.mp4 -ss 00:00:00 -t 10 out1.mp4
+
+ffmpeg -i long.mp4 -y -ss 00:00:05 -t 00:00:05 part1.mp4
 ```
 
 ```shell
-ffmpeg -ss 00:01:30 -t 00:00:20 -i input.avi -vcodec copy -acodec copy output.avi
+# 这种方法可能导致元数据时长和实际时长不一致
+ffmpeg -y -ss 00:00:00 -t 00:00:05 -i long.mp4 -vcodec copy -acodec copy part0.mp4
 ```
 
 - -ss 开始时间
@@ -573,16 +644,18 @@ ffmpeg -i 1.mp3 -i 2.mp3 -filter_complex '[0:0] [1:0] concat=n=2:v=0:a=1 [a]' -m
 
 ### 音频混音
 
-#### 方法一
+#### amerge
 
 ```shell
 ffmpeg -i test.mp4 -i test.mp3 -filter_complex "[0:a] [1:a]amerge=inputs=2[aout]" -map "[aout]" -ac 2 mix_amerge.aac
 ```
 
-#### 方法二
+#### amix
 
 ```shell
-ffmpeg -i input1 -i input2 -i input3 -filter_complex 'amix=inputs=3:duration=first:dropout_transition=3' output
+ffmpeg -y -i 1.mp3 -i 2.mp3 -i 3.mp3 -filter_complex 'amix=inputs=3:duration=longest:dropout_transition=2' mix.mp3
+
+ffmpeg -y -i 1.mp3 -i 2.m4a -filter_complex 'amix=inputs=2:duration=longest:dropout_transition=2' 1m2.mp3
 ```
 
 - inputs: 输入的数量，默认为 2
