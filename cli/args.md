@@ -67,15 +67,17 @@
 
 | 参数 | 作用 |
 | ---- | ---- |
-| -f fmt | 强制格式 |
-| -c codec | 编解码器名称 |
+| -f fmt | 指定音频/视频格式 |
+| -i filename | 指定输入文件名 |
+| -t duration | 记录或转码音频/视频的时长（秒） |
+| -ss time_off | 设置开始时间偏移（秒），支持 `hh:mm:ss[.xxx]` 格式 |
+| -fs limit_size | 设置文件大小的上限（字节） |
+| -map | 指定输出文件的流映射关系 |
+| -c codec | 手动指定输出文件的编码 |
 | -codec codec | 编解码器名称 |
 | -pre preset | 预设名称 |
 | -map_metadata outfile[,metadata]:infile[,metadata] | 设置元数据信息 |
-| -t duration | 记录或转码音频/视频的持续时间 秒 |
 | -to time_stop | 记录或转码停止时间 |
-| -fs limit_size | 设置限制文件大小字节 |
-| -ss time_off | 设置开始时间偏移 |
 | -sseof time_off | 设置相对于 EOF 的开始时间偏移 |
 | -seek_timestamp | 使用 `-ss` 按时间戳启用/禁用查找 |
 | -timestamp time | 设置录制时间戳 |
@@ -90,35 +92,51 @@
 | -discard | 丢弃 |
 | -disposition | 处置 |
 
+- `-map 1:0 -map 1:1` 将第二个输入文件的第一个流和第二个流写入输出文件；
+- 其中 `-c:v` 用于指定视频编码，`-c:a` 指定音频编码；视频文件的后缀如 mp4、mkv、avi 等只是表示用来装载媒体流的“容器”类型，而编码时使用的编码方式则另需指定；
+- `-c:v copy` 表示复制输入文件中的视频流到输出文件，不重新进行编码；
+- `-c:av copy` 表示输入文件中的视频流和音频流同时复制到输出文件，只改变文件容器。
+
 ## 视频选项
 
 | 参数 | 作用 |
 | ---- | ---- |
-| -vframes number | 设置要输出的视频帧数 |
+| -vn | 取消视频的输出 |
+| -bitexact | 使用标准比特率 |
+| -b bitrate, -vb | 视频比特率 -b:v |
 | -r rate | 设置帧速率（Hz值，分数或缩写） |
 | -s size | 设置帧大小（WxH 或缩写） |
 | -aspect aspect | 宽高比设置的宽高比（4：3、16：9或1.3333、1.7777） |
+| -vframes number | 设置要输出的视频帧数 |
 | -bits_per_raw_sample number | 设置每个原始样本的位数 |
-| -vn | 禁用视频 |
 | -vcodec codec | 强制视频编解码器 |
 | -timecode hh:mm:ss[:;.]ff | 设置初始 TimeCode 值 |
 | -pass n | 选择通行证编号 1-3 |
 | -vf filter_graph | 设置视频过滤器 |
-| -ab bitrate | 音频比特率 -b:a |
-| -b bitrate | 视频比特率 -b:v |
 | -dn | 禁用数据 |
+
+- -croptop size：设置顶部切除尺寸
+- -cropbottom size：设置底部切除尺寸
+- -cropleft size：设置左切除尺寸
+- -cropright size：设置右切除尺寸
+- -padtop size：设置顶部补齐尺寸
+- -padbottom size：底补齐
+- -padleft size：左补齐
+- -padright size：右补齐
+- -padcolor color：颜色补齐
 
 ## 音频选项
 
 | 参数 | 作用 |
 | ---- | ---- |
+| -an | 取消音频的输出 |
+| -ab bitrate | 音频比特率 -b:a |
 | -aframes number | 设置要输出的音频帧数 |
 | -aq quality | 设置音频质量（特定于编解码器） |
 | -ar rate | 设置音频采样率（以 Hz 为单位） |
 | -ac channels | 设置音频频道数 |
-| -an | 禁用音频 |
 | -acodec codec | 强制音频编解码器 |
-| -vol volume | 更改音频音量（256 =正常） |
+| -vol volume | 更改音频音量，默认 256 <百分比> |
 | -af filter_graph | 设置音频过滤器 |
 
 ## 字幕选项

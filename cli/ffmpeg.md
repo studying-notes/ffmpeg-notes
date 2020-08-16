@@ -8,6 +8,8 @@
     - [显示流信息](#显示流信息)
     - [分离视频流/音频流](#分离视频流音频流)
     - [文件格式转换](#文件格式转换)
+      - [将一张 RGBA 格式表示的数据转换为 JPEG 格式的图片](#将一张-rgba-格式表示的数据转换为-jpeg-格式的图片)
+      - [将一个 YUV 格式表示的数据转换为 JPEG 格式的图片](#将一个-yuv-格式表示的数据转换为-jpeg-格式的图片)
       - [编码格式控制](#编码格式控制)
       - [维持源文件的质量](#维持源文件的质量)
     - [音视频合成](#音视频合成)
@@ -31,6 +33,10 @@
       - [更改视频分辨率](#更改视频分辨率)
       - [视频裁剪](#视频裁剪)
       - [压缩音视频文件](#压缩音视频文件)
+        - [压缩视频](#压缩视频)
+          - [改变视频的比特率和编码](#改变视频的比特率和编码)
+          - [改变视频的帧率](#改变视频的帧率)
+          - [改变视频的分辨率](#改变视频的分辨率)
       - [音视频变速](#音视频变速)
       - [调节音量](#调节音量)
         - [倍数调节](#倍数调节)
@@ -69,11 +75,10 @@
     - [音频混音](#音频混音)
       - [amerge](#amerge)
       - [amix](#amix)
-    - [HLS 切片](#hls-切片)
-  - [视频图像互转](#视频图像互转)
-    - [视频转 JPEG](#视频转-jpeg)
-    - [视频转 GIF](#视频转-gif)
-    - [图片转视频](#图片转视频)
+  - [视频图像相互转换](#视频图像相互转换)
+    - [视频转换为 JPEG](#视频转换为-jpeg)
+    - [视频转换为 GIF](#视频转换为-gif)
+    - [从多张图片创建视频](#从多张图片创建视频)
   - [直播相关](#直播相关)
     - [推流](#推流)
     - [拉流保存](#拉流保存)
@@ -149,11 +154,11 @@ ffmpeg -i  video.mp4 audio.aac
 - `-vn` : 不处理视频
 - `-an` : 不处理音频
 - `-ar` : 设定采样率，常用的值是 22050 Hz、44100 Hz、48000 Hz
+- `-ab` : 表明音频比特率
 - `-ac` : 设定声音的通道数目
 - `-acodec` : 设定声音编解码器，未设定时则使用与输入流相同的编解码器；`copy` 指明只拷贝，不做编解码
 - `-vcodec` : 设定视频编解码器，未设定时则使用与输入流相同的编解码器 
-- `-ab` : 表明音频比特率
-- `-f` : 输出文件格式
+- `-f` : 指定输出文件的格式
 
 ### 文件格式转换
 
@@ -171,6 +176,18 @@ ffmpeg -i 1.mp3 1.aac
 ffmpeg -i 2.aac 2.m4a
 ```
 
+#### 将一张 RGBA 格式表示的数据转换为 JPEG 格式的图片
+
+```shell
+ffmpeg -f rawvideo -pix_fmt rgba -s 480*480 -i texture.rgb -f image2 -vcodec mjpeg output.jpg
+```
+
+#### 将一个 YUV 格式表示的数据转换为 JPEG 格式的图片
+
+```shell
+ffmpeg -f rawvideo -pix_fmt yuv420p -s 480*480 -i texture.yuv -f image2 -vcodec mjpeg output.jpg
+```
+
 #### 编码格式控制
 
 对于编码格式，一种方法是通过目标文件的扩展名来控制，另一种方法是通过 ``-c:v`` 参数来控制。
@@ -184,6 +201,8 @@ ffmpeg -i  input.mp4 -c:v libx265  input.avi
 ```shell
 ffmpeg -i demo.flv -qscale 0 demo.mp4
 ```
+
+- `-qscale` 值越低，输出视频的质量越高
 
 ### 音视频合成
 
@@ -358,18 +377,41 @@ crop 格式：
 crop=out_w:out_h:x:y
 ```
 
-- `out_w`: 输出的宽度。可以使用 `in_w` 表式输入视频的宽度
-- `out_h`: 输出的高度。可以使用 `in_h` 表式输入视频的高度
-- `x` : X坐标
-- `y` : Y坐标
+- `out_w`: 输出的宽度，可以使用 `in_w` 表式输入视频的宽度
+- `out_h`: 输出的高度，可以使用 `in_h` 表式输入视频的高度
+- `x` : X 坐标，最左边为 0，默认为源视频的中间位置
+- `y` : Y 坐标，最顶部为 0，默认为源视频的中间位置
 
 > 如果 x 和 y 设置为 0，则从左上角开始裁剪，不写则从中心点裁剪。
 
 #### 压缩音视频文件
 
+##### 压缩视频
+
+###### 改变视频的比特率和编码
+
 ```shell
-# 压缩视频
-ffmpeg -i input.mp4 -vf scale=1280:-1 -c:v libx264 -preset veryslow -crf 24 output.mp4
+ffmpeg -i input.webm -c:a copy -c:v vp9 -b:v 1M output.mkv
+
+ffmpeg -i long.mp4 -c:a copy -b:v 1M long_compress.mp4 -y
+```
+
+- -b:v 用于指定视频的比特率
+
+###### 改变视频的帧率
+
+```shell
+ffmpeg -i long.mp4 -c:a copy -s hd720 long_compress.mp4
+
+ffmpeg -i long.mp4 -c:a copy -s 1280x720 long_compress.mp4
+```
+
+###### 改变视频的分辨率
+
+同时压缩了音频流：
+
+```shell
+ffmpeg -i input.mp4 -vf scale=1280:-1 -c:v libx264 -preset veryslow -crf 24 -c:a aac -strict -2 -b:a 128k output.mp4
 ```
 
 ```shell
@@ -665,18 +707,9 @@ ffmpeg -y -i 1.mp3 -i 2.m4a -filter_complex 'amix=inputs=2:duration=longest:drop
   - first: 适配第一个输入的持续时间
 - dropout_transition: 输入流结束时容量重整化的转换时间， 默认值为 2 秒。
 
-### HLS 切片
+## 视频图像相互转换
 
-```shell
-ffmpeg -i out.mp4 -c:v libx264 -c:a libfdk_aac -strict -2 -f hls  out.m3u8
-```
-
-- `-strict -2` 指明音频格式为 `AAC`
-- `-f hls` 转成 `m3u8` 格式
-
-## 视频图像互转
-
-### 视频转 JPEG
+### 视频转换为 JPEG
 
 ```shell
 ffmpeg –i test.avi –r 1 –f image2 image-%3d.jpg
@@ -684,16 +717,22 @@ ffmpeg –i test.avi –r 1 –f image2 image-%3d.jpg
 
 - `-r` 提取图像的频率
 
-### 视频转 GIF
+### 视频转换为 GIF
 
 ```shell
 ffmpeg -i out.mp4 -ss 00:00:00 -t 10 out.gif
 ```
 
-### 图片转视频
+### 从多张图片创建视频
 
 ```shell
 ffmpeg  -f image2 -i image-%3d.jpeg images.mp4
+
+# 每秒切换一张图片
+ffmpeg -framerate 1 -i image-%02d.jpg -c:v libx264 -r 30 -pix_fmt yuv420p output.mp4
+
+# 每帧切换一张图片
+ffmpeg -framerate 30 -i image-%02d.jpg -c:v libx264 -pix_fmt yuv420p output.mp4
 ```
 
 ## 直播相关
