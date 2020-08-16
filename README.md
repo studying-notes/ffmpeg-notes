@@ -9,6 +9,8 @@
   - [流标识符](#流标识符)
 
 - [FFmpeg 命令详解](cli/ffmpeg.md)
+- [FFprobe 常用命令](cli/ffprobe.md)
+- [FFplay 常用命令](cli/ffplay.md)
 
 ## FFmpeg 目录及作用
 
