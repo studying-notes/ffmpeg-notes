@@ -1,0 +1,58 @@
+FROM lsiobase/ffmpeg:bin as binstage
+FROM lsiobase/ubuntu:focal
+
+# Add files from binstage
+COPY --from=binstage / /
+
+# hardware env
+ENV \
+ LIBVA_DRIVERS_PATH="/usr/lib/x86_64-linux-gnu/dri" \
+ NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
+ NVIDIA_VISIBLE_DEVICES="all"
+
+# Set up project directory
+WORKDIR "/media"
+
+RUN echo "deb http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse\ndeb http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse\ndeb http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse\ndeb http://mirrors.aliyun.com/ubuntu/ focal-proposed main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ focal-proposed main restricted universe multiverse\ndeb http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse\n" >/etc/apt/sources.list
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN export TZ=Asia/Shanghai
+
+# update anything needed
+RUN apt-get -y update && apt-get -y upgrade
+
+RUN \
+ echo "**** install runtime ****" && \
+ apt-get update && \
+ apt-get install -y \
+	i965-va-driver \
+	libexpat1 \
+	libgl1-mesa-dri \
+	libglib2.0-0 \
+	libgomp1 \
+	libharfbuzz0b \
+	libv4l-0 \
+	libx11-6 \
+	libxcb1 \
+	libxext6 \
+	libxml2 && \
+ echo "**** clean up ****" && \
+ rm -rf \
+	/var/lib/apt/lists/* \
+	/var/tmp/*
+
+RUN apt-get -y update && apt-get -y upgrade
+
+# need dep
+RUN apt-get -y install golang-go
+
+RUN go env -w GOPROXY=https://goproxy.cn,direct
+RUN go env -w GOSUMDB=off
+RUN go env -w GO111MODULE=on
+
+EXPOSE 18001
+
+COPY media .
+COPY configs/config.yaml ./configs
+RUN ./media
