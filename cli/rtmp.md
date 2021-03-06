@@ -24,6 +24,21 @@ draft: false  # 草稿
 ffmpeg -i udp://localhost:10240
 ```
 
+```shell
+ffplay -f mpegts udp://localhost:10240
+```
+
+## 通过 Nginx 服务
+
+```shell
+ffmpeg -re -stream_loop -1 -i testdata/v1.mp4 -f flv rtmp://localhost:11935/live -y -hide_banner
+```
+
+```shell
+ffplay rtmp://localhost:11935/live
+```
+
+
 ## 推流
 
 #### 命令参数解释
@@ -169,6 +184,106 @@ ffmpeg -f concat -safe 0 -i test.txt -t 27.040 -loop 1 -i 1080P%05d.png -filter_
 
 ```
 
+## 抓屏方法
+
+在 Linux 下可以使用 x11grab 抓屏，在 MacOS 下可以使用 avfoundation 抓屏
+
+### MacOS
+
+#### 仅录制桌面
+
+```shell
+ffmpeg -f avfoundation -i "1" -vcodec libx264 -preset ultrafast -acodec libfaac -f flv rtmp://localhost/live
+```
+
+#### 桌面 + 麦克风
+
+```shell
+ffmpeg -f avfoundation -i "1:0" -vcodec libx264 -preset ultrafast -acodec libmp3lame -ar 44100 -ac 1 -f flv rtmp://localhost:1935/rtmplive/home 
+```
+
+#### 桌面 + 麦克风 + 摄像头拍摄
+
+```shell
+ffmpeg -f avfoundation -framerate 30 -i "1:0" \-f avfoundation -framerate 30 -video_size 640x480 -i "0" \-c:v libx264 -preset ultrafast \-filter_complex 'overlay=main_w-overlay_w-10:main_h-overlay_h-10' -acodec libmp3lame -ar 44100 -ac 1  -f flv rtmp://localhost:1935/rtmplive/home 
+```
+
+```shell
+
+```
+
+
+
+### Windows
+
+#### gdigrab
+
+基于 GDI 录屏，FFmpeg 直接从 Windows 的 GDI 中拷贝图形，然后再合成视频。
+
+优点：省事，不需要依赖其他库
+
+缺点：内存拷贝性能不是很好，没有硬件加速
+
+gdigrab 是 FFmpeg 专门用于抓取 Windows 桌面的设备。非常适合用于屏幕录制。它通过不同的输入 URL 支持两种方式的抓取：
+
+- “desktop”：抓取整张桌面。或者抓取桌面中的一个特定的区域。
+- “title={窗口名称}”：抓取屏幕中特定的一个窗口。
+
+gdigrab 另外还支持一些参数，用于设定抓屏的位置：
+
+- offset_x：抓屏起始点横坐标。
+- offset_y：抓屏起始点纵坐标。
+- video_size：抓屏的大小。
+- framerate：抓屏的帧率。
+
+```shell
+ffmpeg -f gdigrab -framerate 6 -offset_x 10 -offset_y 20 -video_size vga -i "desktop" -vcodec libx264 -preset ultrafast -acodec libfaac -f flv rtmp://localhost:11935/live
+```
+
+```shell
+ffmpeg -framerate 30 -offset_x 0 -offset_y 0 -video_size vga -i "desktop" -acodec libfaac -f flv -preset ultrafast -vcodec libx264 rtmp://localhost:11935/live -y -hide_banner
+```
+
+#### directshow
+
+基于directshow方案，FFmpeg从directshow驱动接口中读取。
+
+优点：性能较好，directshow可以控制采样帧率，硬件加速。
+
+缺点：需要安装directshow驱动，暂时找不到。。。
+
+## 摄像头推流
+
+```shell
+ffmpeg -f dshow -i video="USB2.0 PC CAMERA" -vcodec libx264 -preset:v ultrafast -tune:v zerolatency -f flv rtmp://127.0.0.1:1935/live/123
+```
+
+## 麦克风推流
+
+```shell
+ffmpeg  -f dshow -i audio="麦克风 (2- USB2.0 MIC)" -vcodec libx264 -preset:v ultrafast -tune:v zerolatency -f flv rtmp://127.0.0.1:1935/live/123
+```
+
+## 摄像头&麦克风推流
+
+```shell
+ffmpeg -f dshow -i video="USB2.0 PC CAMERA" -f dshow -i audio="麦克风 (2- USB2.0 MIC)" -vcodec libx264 -preset:v ultrafast -tune:v zerolatency -f flv rtmp://127.0.0.1:1935/live/123
+```
+
+
+```shell
+ffmpeg -f dshow -i video="USB2.0 PC CAMERA":audio="麦克风 (2- USB2.0 MIC)" -vcodec libx264  -r 25  -preset:v ultrafast -tune:v zerolatency -f flv rtmp://127.0.0.1:1935/live/123
+```
+
+```shell
+
+```
+
+```shell
+
+```
+
+
 ```shell
 
 ```
@@ -180,6 +295,7 @@ ffmpeg -f concat -safe 0 -i test.txt -t 27.040 -loop 1 -i 1080P%05d.png -filter_
 ```shell
 
 ```
+
 
 ```shell
 
