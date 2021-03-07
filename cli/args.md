@@ -1,13 +1,21 @@
-# FFmpeg 命令参数
+---
+date: 2020-09-15T22:20:49+08:00  # 创建日期
+author: "Rustle Karl"  # 作者
 
-- [FFmpeg 命令参数](#ffmpeg-命令参数)
-  - [显示功能/信息](#显示功能信息)
-    - [日志记录级别](#日志记录级别)
-  - [全局选项](#全局选项)
-  - [文件选项](#文件选项)
-  - [视频选项](#视频选项)
-  - [音频选项](#音频选项)
-  - [字幕选项](#字幕选项)
+# 文章
+title: "FFmpeg 命令参数列表"  # 文章标题
+url:  "posts/ffmpeg/cli/args"  # 设置网页链接，默认使用文件名
+tags: [ "ffmpeg" ]  # 自定义标签
+series: [ "FFmpeg 从入门到放弃"]  # 文章主题/文章系列
+categories: [ "学习笔记"]  # 文章分类
+
+# 章节
+weight: 20 # 文章在章节中的排序优先级，正序排序
+chapter: false  # 将页面设置为章节
+
+index: true  # 文章是否可以被索引
+draft: false  # 草稿
+---
 
 ## 显示功能/信息
 
@@ -30,6 +38,12 @@
 | -sources device | 列出输入设备的来源 |
 | -sinks device | 列出输出设备的接收器 |
 | -hwaccels | 显示可用的硬件加速方法 |
+
+### 列出支持的滤镜
+
+```shell
+ffmpeg -filters | grep draw
+```
 
 ### 日志记录级别
 
