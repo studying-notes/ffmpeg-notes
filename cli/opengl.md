@@ -37,7 +37,7 @@ ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex gltransition=offset=1:durat
 
 ### 三个以上视频合成
 
-nohup Xvfb :1 -screen 0 1280x1024x16 &
+nohup Xvfb :1 -screen 0 1280x1024x16  > /dev/null 2>&1
 env DISPLAY=:1 
 
 统一命名方法：
