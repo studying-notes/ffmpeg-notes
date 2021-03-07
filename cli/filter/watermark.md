@@ -37,7 +37,9 @@ draft: false  # 草稿
 ffmpeg -y -i video.mp4 -vf "drawtext=fontsize=100:fontfile=font.ttf:text='你好':fontcolor=green:box=1:boxcolor=yellow:x=20:y=20" video_logo_font.mp4
 ```
 
-
+```
+ffmpeg -y -i media/1.mp4 -vf "drawtext=fontsize=100:fontfile=media/default.ttf:text='你好':fontcolor=green:box=1:boxcolor=yellow:x=20:y=20" video_logo_font.mp4
+```
 
 - `-vf` `-filter:v` 的别名，为视频流添加滤镜处理
 - `drawtext` 添加文字水印
@@ -85,3 +87,5 @@ ffmpeg -y -i video.mp4 -vf "movie=logo.jpg,scale=100x100[logo];[in][logo]overlay
 ```
 
 - `scale=100x100` 调整水印图片的大小
+
+> 不推荐，简单滤镜不太好生成
