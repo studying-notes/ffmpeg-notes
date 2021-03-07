@@ -3,7 +3,7 @@ date: 2021-03-03T14:01:34+08:00  # 创建日期
 author: "Rustle Karl"  # 作者
 
 # 文章
-title: "Ffmpeg Doc 12 Device"  # 文章标题
+title: "FFmpeg Doc 12 Device"  # 文章标题
 # description: "文章描述"
 url:  "posts/ffmpeg/docs/ch12_device"  # 设置网页永久链接
 tags: [ "ffmpeg"]  # 标签
@@ -19,35 +19,35 @@ toc: true  # 是否自动生成目录
 draft: false  # 草稿
 ---
 
-## 25 设备选项
-`libavdevice`库提供类似`libavformat`的接口，即一个输入设备被认为类似一个分离器活着输出设备类似一个混合器。这些接口也类似`libavformat`一样提供一些常规设备选项。（参考ffmepeg 格式手册）。
+## 设备
+
+`libavdevice` 库提供类似 `libavformat` 的接口，即一个输入设备被认为类似一个分离器活着输出设备类似一个混合器。这些接口也类似 `libavformat` 一样提供一些常规设备选项。
 
 当然，一些输入或者输出设备还提供一些私有的选项，它们只在特定的组件中有效。
 
-可以做ffmpeg命令行中采用`－option value`来设定某个选项点，或者通过`libavutil／opt.h`中的API设置，或者通过`AVFormatContext`的显式值来进行设置。
+可以做 ffmpeg 命令行中采用 `-option value` 来设定某个选项点，或者通过 `libavutil/opt.h` 中的 API 设置，或者通过 `AVFormatContext` 的显式值来进行设置。
 
-## 26 输入设备 ##
-FFmpeg中的输入设备配置元素用来启用对附加到您的系统一个多媒体设备访问数据。
+## 输入设备
 
-当编译时，默认会支持所有的输入设备。你可以通过在配置脚本执行时附加`–list-indevs`了解到支持的设备。
+FFmpeg 中的输入设备配置元素用来启用对附加到您的系统一个多媒体设备访问数据。
 
-可以通过`–disable-indevs`在编译时禁用所有输入设备，也可以在此基础上通过`–enable-indev=INDEV`允许个别设备，或者在默认支持基础上通过`–disable-indev=INDEV`禁用个别设备支持达到类似的目的。
+当编译时，默认会支持所有的输入设备。你可以通过在配置脚本执行时附加 `–list-indevs` 了解到支持的设备。
 
-在ff*工具集中，使用`-devices`可以获取当前支持的设备信息。
+可以通过 `–disable-indevs` 在编译时禁用所有输入设备，也可以在此基础上通过 `–enable-indev=INDEV` 允许个别设备，或者在默认支持基础上通过 `–disable-indev=INDEV` 禁用个别设备支持达到类似的目的。
 
-下面是当前可用的输入设备介绍。
+使用`-devices`可以获取当前支持的设备信息。
 
-### alsa ###
-ALSA (Advanced Linux Sound Architecture——高级Linux音频架构) 输入设备
+### alsa
 
-为了能够使用这个设备，在你的系统上必须安装有`libasound`库。
+ALSA (Advanced Linux Sound Architecture ——高级 Linux 音频架构 ) 输入设备。为了能够使用这个设备，在你的系统上必须安装有 `libasound` 库。
 
 这个设备允许从ALSA设备采集，设备通过名称来作为ALSA卡标识符，以进行采集。
 
 ALSA标识语法为：
 
     hw:CARD[,DEV[,SUBDEV]]
-这里`DEV`和`SUBDEV`是可选的。通过这3个参数（`CARD`、`DEV`和`SUBDEV`）可以指定一个卡的序号或者标识、设备序号和子设备序号（-1意味着任何一个）
+
+这里 `DEV` 和 `SUBDEV` 是可选的。通过这 3 个参数（ `CARD`、`DEV` 和 `SUBDEV` ）可以指定一个卡的序号或者标识、设备序号和子设备序号（ -1 意味着任何一个）
 
 在你的系统上要列出当前可用的卡，可以通过文件：`/proc/asound/cards and /proc/asound/devices`
 
@@ -55,47 +55,41 @@ ALSA标识语法为：
 
     ffmpeg -f alsa -i hw:0 alsaout.wav
 
-更多信息参考[http://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html](http://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html)
+### avfoundation
 
-### avfoundation ###
 AVFoundation 输入设备
 
-AVFoundation是当前Apple OSX（>=10.7）下建议的流采集框架，它在IOS上也是可用的。而老的`QTKit`框架从OSX10.7开始已经废弃。
+AVFoundation 是当前 Apple OSX （ > = 10.7 ）下建议的流采集框架，它在 IOS 上也是可用的。而老的 `QTKit` 框架从 OSX10.7 开始已经废弃。
 
 这个设备作为输入文件名的语法为：
 
     -i "[[VIDEO]:[AUDIO]]"
-第一部分选择视频输入，然后选择音频输入。流必须通过设备列表中的设备名或者设备索引号来指定。或者视频和/或音频输入设备可以通过使用` -video_device_index <INDEX>`和/或`-audio_device_index <INDEX>`语法指定，它将覆盖设备名或者索引来作为输入文件名。
 
-所有有效的设备都可以通过使用`-list_devices true`枚举出来，它会列出所有设备的名称以及对应的索引号。
+第一部分选择视频输入，然后选择音频输入。流必须通过设备列表中的设备名或者设备索引号来指定。或者视频和/或音频输入设备可以通过使用 ` -video_device_index <INDEX>` 和/或 `-audio_device_index <INDEX>` 语法指定，它将覆盖设备名或者索引来作为输入文件名。
+
+所有有效的设备都可以通过使用 `-list_devices true` 枚举出来，它会列出所有设备的名称以及对应的索引号。
 
 下面是两个设备的别名：
 
-- default：选择AVFoundation默认设备（类型）。
+- default：选择 AVFoundation 默认设备（类型）。
 - none：不记录相应的媒体类型，这相当于指定一个空的设备名或者索引
 
-**译者补注**：none可以用来在进行指定时明确表示没有某种类型，比如
+**译者补注**：none 可以用来在进行指定时明确表示没有某种类型，比如
 
     -i "none:[AUDIO]"
+
 表示没有视频只有音频
 
-#### avfoundation选项 ####
-avfoundation支持如下的选项：
+#### avfoundation 选项
 
-- -list_devices <TRUE|FALSE>
+avfoundation 支持如下的选项：
 
-    如果设置为`true`则列出所有有效输入设备，显示设备名和对应的索引
-- -video_device_index <INDEX>
+- -list_devices <TRUE|FALSE> 如果设置为`true`则列出所有有效输入设备，显示设备名和对应的索引
+- -video_device_index <INDEX> 通过索引指定视频设备，它将覆盖作为输入文件名
+- -audio_device_index <INDEX> 通过索引指定音频设备，它将覆盖作为输入文件名
+- -pixel_format <FORMAT> 描述视频设备采用的像素格式，如果不知道，将列出可用设备中第一个有效的支持格式。像素格式是： monob, rgb555be, rgb555le, rgb565be, rgb565le, rgb24, bgr24, 0rgb, bgr0, 0bgr, rgb0, bgr48be, uyvy422, yuva444p, yuva444p16le, yuv444p, yuv422p16, yuv422p10, yuv444p10, yuv420p, nv12, yuyv422, gray
 
-    通过索引指定视频设备，它将覆盖作为输入文件名
-- -audio_device_index <INDEX>
-
-    通过索引指定音频设备，它将覆盖作为输入文件名
-- -pixel_format <FORMAT>
-
-    描述视频设备采用的像素格式，如果不知道，将列出可用设备中第一个有效的支持格式。像素格式是： monob, rgb555be, rgb555le, rgb565be, rgb565le, rgb24, bgr24, 0rgb, bgr0, 0bgr, rgb0, bgr48be, uyvy422, yuva444p, yuva444p16le, yuv444p, yuv422p16, yuv422p10, yuv444p10, yuv420p, nv12, yuyv422, gray
-
-#### avfoundation例子 ####
+#### avfoundation 例子
 
 - 输出AVFoundation支持的设备
 
@@ -113,142 +107,97 @@ avfoundation支持如下的选项：
 
     $ ffmpeg -f avfoundation -pixel_format bgr0 -i "default:none" out.avi
 
-### bktr ###
+### bktr
+
 BSD 视频输入设备
 
-### decklink ###
-decklink输入设备提供从Blackmagic DeckLink 采集的能力
+### decklink
 
-要支持这个设备，编译时需要Blackmagic DeckLink SDK ，且需要采用`--extra-cflags`和`--extra-ldflags`编译选项。在Windows，你可能需要通过`widl`运行IDL。
+decklink 输入设备提供从 Blackmagic DeckLink 采集的能力
 
-DeckLink非常挑剔支持输入格式。像素格式万恶有`uyvy422/210`.对于视频你必须利用`-list_formats 1`指定一个视频画面尺寸（-list_formats 1.）和帧率。音频采样率被设置为48KHz。音频数可能是2、8或16
+要支持这个设备，编译时需要 Blackmagic DeckLink SDK，且需要采用 `--extra-cflags` 和 `--extra-ldflags` 编译选项。在 Windows，你可能需要通过 `widl` 运行 IDL。
 
-#### decklink选项 ####
+DeckLink 非常挑剔支持输入格式。像素格式有 `uyvy422/210`。对于视频你必须利用 `-list_formats 1` 指定一个视频画面尺寸（-list_formats 1.）和帧率。音频采样率被设置为 48KHz。音频数可能是 2、8 或 16
 
-- list_devices
+#### decklink 选项
 
-    如果设置为`true`，输出设备列表然后退出，默认为false.
-- list_formats
+- list_devices 如果设置为`true`，输出设备列表然后退出，默认为false.
+- list_formats 如果设置为`true`,输出支持的格式然后退出，默认为`false.
+- bm_v210 如果设置为 1，则视频采集采用 10bit 量化的 uyvy422 v210 标准。不是所有的 Blackmagic 设备都支持这个选项
 
-    如果设置为`true`,输出支持的格式然后退出，默认为`false.
-- bm_v210
+#### decklink 例子
 
-    如果设置为1，则视频采集采用10bit量化的uyvy422 v210标准。不是所有的Blackmagic设备都支持这个选项
-
-#### decklink例子 ####
 - 列出所有输入设备:
 
     ffmpeg -f decklink -list_devices 1 -i dummy
+
 - 列出支持的格式:
 
     ffmpeg -f decklink -list_formats 1 -i 'Intensity Pro'
-- 采集1080i50视频格式 (format 11):
+
+- 采集 1080i50 视频格式 (format 11):
 
     ffmpeg -f decklink -i 'Intensity Pro@11' -acodec copy -vcodec copy output.avi
+
 - 以10bit采集1080i50视频格式:
 
     ffmpeg -bm_v210 1 -f decklink -i 'UltraStudio Mini Recorder@11' -acodec copy -vcodec copy output.avi
+
 - 采集720p50格式，同时采集32bit音频:
 
     ffmpeg -bm_audiodepth 32 -f decklink -i 'UltraStudio Mini Recorder@14' -acodec copy -vcodec copy output.avi
+
 - 采集576i50采集视频，同时采集8路音频:
 
     ffmpeg -bm_channels 8 -f decklink -i 'UltraStudio Mini Recorder@3' -acodec copy -vcodec copy output.avi
 
-### dshow ###
+### dshow
+
 Windows DirectShow 输入设备。
 
-DirectShow在ffmpeg中由`mingw-w64`项目提供支持。当前只有音频和视频设备能够使用。
+DirectShow 在 ffmpeg 中由 `mingw-w64` 项目提供支持。当前只有音频和视频设备能够使用。
 
-多个单独输入的设备可能被打开,但它们也可能打开相同的输入,这将改善他们之间的同步
+多个单独输入的设备可能被打开，但它们也可能打开相同的输入，这将改善他们之间的同步
 
 输入名可以按格式（语法）：
 
     TYPE=NAME[:TYPE=NAME]
-这里`TYPE`可以是`audio`或者`video`，`NAME`是设备名或者别名。
 
-#### dshow选项 ####
+这里 `TYPE` 可以是 `audio` 或者 `video`，`NAME` 是设备名或者别名。
+
+#### dshow 选项
+
 如果没有特别指定，将采用设备的默认值。如果设备不支持要求的选项，则会打开失败。
 
-- video_size
+- video_size 设置采集视频的尺寸
+- framerate 设置采集视频的帧率
+- sample_rate 设置采集音频的采样率（单位 Hz ）
+- sample_size 设置采集音频的采样位深（单位 bits ）
+- channels 选择采集音频的通道
+- list_devices 如果为真，输出设备列表并退出
+- list_options 如果为真，输出选择设备的选项列表并退出
+- video_device_number 对视频设备名设置索引编号 ( 从 0 开始，默认 0).
+- audio_device_number 对音频设备名设置索引编号 ( 从 0 开始，默认 0).
+- pixel_format 选择用于 DirectShow 的像素格式。当视频编码没有设置或者设置为 `rawvideo` 时需要设置
+- audio_buffer_size 以 milliseconds 为单位设置音频设备缓冲大小（它可以直接影响延迟，则取决于依赖的设备）。默认使用设备默认缓冲（通常为 500ms 的倍数）。这个值设置过低会降低性能。
+- video_pin_name 通过 pin 名称（或者别名）选择视频捕获源
+- audio_pin_name 通过 pin 名称（或者别名）选择音频捕获源
+- crossbar_video_input_pin_number 从交错 / 交叉设备（音视频交错编码）中选择视频输入端口。可以选择交错设备的视频解码输出端。**注意**改变这个值将影响未来的调用（设置了一个新的默认值），直到发生系统重启
+- crossbar_audio_input_pin_number 从交错 / 交叉设备（音视频交错编码）中选择音频输入端口。可以选择交错设备的音频解码输出端。**注意**改变这个值将影响未来的调用（设置了一个新的默认值），直到发生系统重启
+- show_video_device_dialog 如果设为真，在开始采集前会弹出一个面向用户的对话框，以允许他们改变视频滤镜属性和一些手动配置。**注意**对于交错设备，可能需要同时在 PAL (25 fps) 和 NTSC (29.97) 输入帧率、尺寸、隔行等等属性。改变这些值以不同的扫描率 / 帧率和避免底部绿色、闪烁的扫描行等等。**注意**这些改变将影响未来的调用（作为新的默认值）直到系统被重启
+- show_audio_device_dialog 如果为真，将在开始采集前弹出一个面向用户的对话框，以允许他们改变音频滤镜属性和一些手动配置
+- show_video_crossbar_connection_dialog 如果为真，如果打开视频设备将在开始采集前弹出一个面向用户的对话框，以允许手动编辑交错设备路由
+- show_audio_crossbar_connection_dialog 如果为真，如果打开音频设备将在开始采集前弹出一个面向用户的对话框，以允许手动编辑交错设备路由
+- show_analog_tv_tuner_dialog 如果为真，将在开始采集前弹出一个面向用户的对话框，以允许手动调整电视频道 / 频率
+- show_analog_tv_tuner_audio_dialog 如果为真，将在开始采集前弹出一个面向用户的对话框，以允许手动调整电视音频设置 ( 例如 mono 与 stereo, 语言 A,B 或者 C)
+- audio_device_load 从文件加载一个音频捕获设备而不是根据名字搜索。它可以同时加载附加参数（如果滤镜支持）。它用于音频源必须指定为一个值，但可以是任何虚拟的
+- audio_device_save 存储当前音频采集滤镜设备和他们的参数（如果滤镜支持）到一个文件。如果文件存在则被覆盖（这个文件可以被 `audio_device_load` 加载）
+- video_device_load 从文件加载一个视频捕获设备而不是根据名字搜索。它可以同时加载附加参数（如果滤镜支持）。它用于视频源必须指定为一个值，但可以是任何虚拟的
+- video_device_save 存储当前视频采集滤镜设备和他们的参数（如果滤镜支持）到一个文件。如果文件存在则被覆盖（这个文件可以被 `video_device_load` 加载）
 
-    设置采集视频的尺寸
-- framerate
+#### dshow 例子
 
-    设置采集视频的帧率
-- sample_rate
-
-    设置采集音频的采样率（单位Hz）
-- sample_size
-
-    设置采集音频的采样位深（单位bits）
-- channels
-
-    选择采集音频的通道
-- list_devices
-
-    如果为真，输出设备列表并退出
-- list_options
-
-    如果为真，输出选择设备的选项列表并退出
-- video_device_number
-
-    对视频设备名设置索引编号(从0开始，默认0).
-- audio_device_number
-
-    对音频设备名设置索引编号(从0开始，默认0).
-- pixel_format
-
-    选择用于DirectShow的像素格式。当视频编码没有设置或者设置为`rawvideo`时需要设置
-- audio_buffer_size
-
-    以milliseconds为单位设置音频设备缓冲大小（它可以直接影响延迟，则取决于依赖的设备）。默认使用设备默认缓冲（通常为500ms的倍数）。这个值设置过低会降低性能。参考[http://msdn.microsoft.com/en-us/library/windows/desktop/dd377582(v=vs.85).aspx](http://msdn.microsoft.com/en-us/library/windows/desktop/dd377582(v=vs.85).aspx)
-- video_pin_name
-
-    通过pin名称（或者别名）选择视频捕获源
-- audio_pin_name
-
-    通过pin名称（或者别名）选择音频捕获源
-- crossbar_video_input_pin_number
-
-    从交错/交叉设备（音视频交错编码）中选择视频输入端口。可以选择交错设备的视频解码输出端。**注意**改变这个值将影响未来的调用（设置了一个新的默认值），直到发生系统重启
-- crossbar_audio_input_pin_number
-
-    从交错/交叉设备（音视频交错编码）中选择音频输入端口。可以选择交错设备的音频解码输出端。**注意**改变这个值将影响未来的调用（设置了一个新的默认值），直到发生系统重启
-- show_video_device_dialog
-
-    如果设为真，在开始采集前会弹出一个面向用户的对话框，以允许他们改变视频滤镜属性和一些手动配置。**注意**对于交错设备，可能需要同时在PAL (25 fps)和NTSC (29.97)输入帧率、尺寸、隔行等等属性。改变这些值以不同的扫描率/帧率和避免底部绿色、闪烁的扫描行等等。**注意**这些改变将影响未来的调用（作为新的默认值）直到系统被重启
-- show_audio_device_dialog
-
-    如果为真，将在开始采集前弹出一个面向用户的对话框，以允许他们改变音频滤镜属性和一些手动配置
-- show_video_crossbar_connection_dialog
-
-    如果为真，如果打开视频设备将在开始采集前弹出一个面向用户的对话框，以允许手动编辑交错设备路由
-- show_audio_crossbar_connection_dialog
-
-    如果为真，如果打开音频设备将在开始采集前弹出一个面向用户的对话框，以允许手动编辑交错设备路由
-- show_analog_tv_tuner_dialog
-
-    如果为真，将在开始采集前弹出一个面向用户的对话框，以允许手动调整电视频道/频率
-- show_analog_tv_tuner_audio_dialog
-
-    如果为真，将在开始采集前弹出一个面向用户的对话框，以允许手动调整电视音频设置 (例如 mono与stereo, 语言 A,B 或者 C)
-- audio_device_load
-
-    从文件加载一个音频捕获设备而不是根据名字搜索。它可以同时加载附加参数（如果滤镜支持）。它用于音频源必须指定为一个值，但可以是任何虚拟的
-- audio_device_save
-
-    存储当前音频采集滤镜设备和他们的参数（如果滤镜支持）到一个文件。如果文件存在则被覆盖（这个文件可以被`audio_device_load`加载）
-- video_device_load
-
-    从文件加载一个视频捕获设备而不是根据名字搜索。它可以同时加载附加参数（如果滤镜支持）。它用于视频源必须指定为一个值，但可以是任何虚拟的
-- video_device_save
-
-    存储当前视频采集滤镜设备和他们的参数（如果滤镜支持）到一个文件。如果文件存在则被覆盖（这个文件可以被`video_device_load`加载）
-
-
-#### dshow例子 ####
-- 输出DirectShow支持的设备列表并退出:
+- 输出 DirectShow 支持的设备列表并退出:
 
     $ ffmpeg -list_devices true -f dshow -i dummy
 
@@ -256,7 +205,7 @@ DirectShow在ffmpeg中由`mingw-w64`项目提供支持。当前只有音频和�
 
     $ ffmpeg -f dshow -i video="Camera"
 
-- 打开名为`Camera`的第二个视频设备:
+- 打开名为 `Camera` 的第二个视频设备:
 
     $ ffmpeg -f dshow -video_device_number 1 -i video="Camera"
 
@@ -277,77 +226,57 @@ DirectShow在ffmpeg中由`mingw-w64`项目提供支持。当前只有音频和�
     $ ffmpeg -f dshow -show_video_device_dialog true -crossbar_video_input_pin_number 0
          -crossbar_audio_input_pin_number 3 -i video="AVerMedia BDA Analog Capture":audio="AVerMedia BDA Analog Capture"
 
-### dv1394 ###
+### dv1394
+
 Linux DV1394输入设备
 
-### fbdev ###
-Linux framebuffer（Linux帧缓冲）输入设备
+### fbdev
+
+Linux framebuffer （ Linux 帧缓冲）输入设备
 
 Linux framebuffer是一种独立于硬件的图像抽象层，它用于在计算机屏幕上显示图像,通常是在控制台（环境）。它可以通过一个文件设备节点访问，通常为：`/dev/fb0`
-
-要了解更多详细信息请阅读Linux源码文件树下文档：`Documentation/fb/framebuffer.txt`
 
 为了从`/dev/fb0`读取：
 
     ffmpeg -f fbdev -r 10 -i /dev/fb0 out.avi
+
 你可以通过下面的命令截屏：
 
     ffmpeg -f fbdev -frames:v 1 -r 1 -i /dev/fb0 screenshot.jpeg
-此外还可以在[http://linux-fbdev.sourceforge.net/](http://linux-fbdev.sourceforge.net/)了解fbset(1)。
 
-### gdigrab ###
-Win32 GDI 屏幕截取设备
+### gdigrab
 
-这个设备允许你截取显示在Windows（系统）上的屏幕区域。
+Win32 GDI 屏幕截取设备，这个设备允许你截取显示在 Windows 上的屏幕区域。它有两个可选的输入文件名（形式）：
 
-它有两个可选的输入文件名（形式）：`desktop`或者`title=window_title`
+- `desktop` 截取整个桌面或者桌面的指定区域；
+- `title=window_title` 根据窗口标题截取单独的窗口，而无论在屏幕上的位置，即使根据某些操作，该窗口已经移除屏幕可见区域，或者被其他窗口覆盖了也可以截取到。
 
-第一个可选名（`desktop`）会截取整个桌面或者桌面的指定区域，第二个可选名（根据窗口标题）会截取单独的窗口，而无论在屏幕上的位置（即即使根据某些操作，该窗口已经移除屏幕可见区域，或者被其他窗口覆盖了也可以截取到）
-
-下面是截取整个桌面的例子：
+截取整个桌面：
 
     ffmpeg -f gdigrab -framerate 6 -i desktop out.mpg
-截取桌面上从点（10,20)开始的640x480大小区域
+
+截取桌面上从点 (10,20) 开始的 640x480 大小区域
 
     ffmpeg -f gdigrab -framerate 6 -offset_x 10 -offset_y 20 -video_size vga -i desktop out.mpg
-截取名为 "Calculator"的窗口
+
+截取名为 "Calculator" 的窗口
 
     ffmpeg -f gdigrab -framerate 6 -i title=Calculator out.mpg
 
-#### gdigrab选项 ####
-- draw_mouse
+#### gdigrab 选项
 
-    为1指定是截取鼠标，0表示不截取，默认为1
-- framerate
+- draw_mouse 为 1 指定是截取鼠标，0 表示不截取，默认为 1
+- framerate 设置帧率，默认为 ntsc, 相应帧率为 30000/1001
+- show_region 在屏幕上显示截取区域，如果指定为 1，则指定的截取范围会显示在屏幕上，通过这个选项，可以很容易的知道要截取的范围，这在只截取屏幕的一部分时很有用。**注意** `show_region` 在截取单独窗口时无效（即不可用）
 
-    设置帧率，默认为ntsc,相应帧率为30000/1001.
-- show_region
+    ffmpeg -f gdigrab -show_region 1 -framerate 6 -video_size cif -offset_x 10 -offset_y 20 -i desktop out.mpg
 
-    在屏幕上显示截取区域。Show grabbed region on screen.
-
-    如果指定为1，则指定的截取范围会显示在屏幕上，通过这个选项，可以很容易的知道要截取的范围，这在只截取屏幕的一部分时很有用。
-
-    **注意**`show_region`在截取单独窗口时无效（即不可用）
-
-    例如:
-
-    	ffmpeg -f gdigrab -show_region 1 -framerate 6 -video_size cif -offset_x 10 -offset_y 20 -i desktop out.mpg
-
-- video_size
-
-    设置视频帧尺寸，默认为屏幕（以`desktop`为源）或者窗口（以`title=window_title`为源）尺寸
-- offset_x
-
-    当区域截取时,起点的x轴的偏移（左边距屏幕左边距离）
-
-    **注意**坐标体系是以可见屏幕左上为原点的。如果你有一个监看对象从左边超出了屏幕可见范围，则`offset_x`的值为负数值。
-- offset_y
-
-    当区域截取时,起点的y轴的偏移（上边距屏幕上边距离）
-
-    **注意**坐标体系是以可见屏幕左上为原点的。如果你有一个监看对象从上边超出了屏幕可见范围，则`offset_y`的值为负数值
+- video_size 设置视频帧尺寸，默认为屏幕（以 `desktop` 为源）或者窗口（以 `title = window_title` 为源）尺寸
+- offset_x 当区域截取时，起点的 x 轴的偏移（左边距屏幕左边距离）。**注意**坐标体系是以可见屏幕左上为原点的。如果你有一个监看对象从左边超出了屏幕可见范围，则 `offset_x` 的值为负数值。
+- offset_y 当区域截取时，起点的 y 轴的偏移（上边距屏幕上边距离）。**注意**坐标体系是以可见屏幕左上为原点的。如果你有一个监看对象从上边超出了屏幕可见范围，则 `offset_y` 的值为负数值
 
 ### iec61883 ###
+
 使用`iec61883`的FireWire（火线） DV/HDV输入设备。
 
 要允许这个输入设备，需要`libiec61883`, `libraw1394` 和 `libavc1394`被安装到系统中。此外还要在编译时配置`--enable-libiec61883`以支持。
@@ -888,43 +817,39 @@ Linux framebuffer是独立于硬件的计算机屏幕显示图形的抽象层，
     ffmpeg -re -i INPUT -vcodec rawvideo -pix_fmt bgra -f fbdev /dev/fb0
 更多请参考[http://linux-fbdev.sourceforge.net/](http://linux-fbdev.sourceforge.net/)的`fbset(1)`
 
-### opengl ###
-OpenGL输出设备
+### OpenGL
 
-编译允许配置选项` --enable-opengl`
+OpenGL 输出设备
 
-这个输出设备允许渲染输出OpenGL内容。内容可以是由程序提供或者默认创建的的SDL窗口。
+编译允许配置选项 ` --enable-opengl`。这个输出设备允许渲染输出 OpenGL 内容。内容可以是由程序提供或者默认创建的的 SDL 窗口。
 
 当设备呈现到外部环境时，程序必须实现处理如下的消息：
-- AV_DEV_TO_APP_CREATE_WINDOW_BUFFER - 在当前线程创建OpenGL 环境
-- AV_DEV_TO_APP_PREPARE_WINDOW_BUFFER - OpenGL当前上下文（环境） 
+
+- AV_DEV_TO_APP_CREATE_WINDOW_BUFFER - 在当前线程创建 OpenGL 环境
+- AV_DEV_TO_APP_PREPARE_WINDOW_BUFFER - OpenGL 当前上下文（环境）
 - AV_DEV_TO_APP_DISPLAY_WINDOW_BUFFER - 交换缓冲区
-- AV_DEV_TO_APP_DESTROY_WINDOW_BUFFER - 分解/摧毁OpenGL环境
-- AV_APP_TO_DEV_WINDOW_SIZE - 告知相关设备（更新信息，程序向设备的） 
+- AV_DEV_TO_APP_DESTROY_WINDOW_BUFFER - 分解 / 摧毁 OpenGL 环境
+- AV_APP_TO_DEV_WINDOW_SIZE - 告知相关设备（更新信息，程序向设备的）
 
-#### opengl选项 ####
+#### OpenGL 选项
 
-- background
+- background 设置背景颜色，默认为`Black` (黑色) 
+- no_window 非 0 表示禁止默认的 SDL 窗口。程序必须提供 OpenGL 环境（上下文）同时设置 `window_size_cb` 与 `window_swap_buffers_cb` 两个回调
+- window_title 设置 SDL 窗口标题, 如果没有指定将以指代输出设备的文件名作为默认。当 `no_window` 设置时会被忽略。 
+- window_size 设置首选窗口尺寸，可以是形如 `widthxheight` 的字符串参数或者视频尺寸短语。如果不指定则默认以输入视频尺寸进行等比例缩放（让高或者宽恰好等于窗口最大可能且完全展示的尺寸）。如果 `no_window` 没有设置可用
 
-    设置背景颜色，默认为`Black` (黑色) 
-- no_window
+#### OpenGL 例子
 
-    非0表示禁止默认的SDL窗口。程序必须提供OpenGL环境（上下文）同时设置 `window_size_cb`与`window_swap_buffers_cb`两个回调
-- window_title
-
-    设置SDL窗口标题,如果没有指定将以指代输出设备的文件名作为默认。当`no_window`设置时会被忽略。 
-- window_size
-
-    设置首选窗口尺寸，可以是形如`widthxheight`的字符串参数或者视频尺寸短语。如果不指定则默认以输入视频尺寸进行等比例缩放（让高或者宽恰好等于窗口最大可能且完全展示的尺寸）。如果`no_window`没有设置可用
-
-#### opengl例子 ####
-使用OpenGL渲染播放到SDL窗口
+使用 OpenGL 渲染播放到 SDL 窗口
 
     ffmpeg  -i INPUT -f opengl "window title"
-### oss ###
+
+### oss
+
 OSS（open Sound System）输出设备
 
 ### pulse ###
+
 PulseAudio输出设备
 
 编译选项开关`--enable-libpulse`
@@ -932,6 +857,7 @@ PulseAudio输出设备
 更多关于PulseAudio信息参考[http://www.pulseaudio.org](http://www.pulseaudio.org)
 
 #### pulse选项 ####
+
 - server
 
     以IP地址描述的用于连接到的PulseAudio服务器，如果不提供则为默认服务器（其他地方进行配置）
@@ -1037,19 +963,3 @@ XV（XVideo）输出设备
 - 解码显示输入视频到多个X11窗口:
 
     ffmpeg -i INPUT -f xv normal -vf negate -f xv negated
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
