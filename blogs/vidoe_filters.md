@@ -279,7 +279,7 @@ ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]avgblur=sizeX=10:sizeY=10[tag
 
 > https://ffmpeg.org/ffmpeg-filters.html#bbox
 
-计算输入帧亮度平面中非黑色像素的边界框。
+计算输入帧亮度通道中非黑色像素的边界框。
 
 该过滤器计算包含所有像素的边界框，这些像素的亮度值大于最小允许值。 描述边界框的参数打印在过滤器日志中。对于输出视频无影响。
 
@@ -363,61 +363,253 @@ ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]bitplanenoise=filter=True[tag
 
 检测视频中全黑的段落。
 
+过滤器将其检测分析以及帧元数据输出到日志。 如果找到至少指定了最小持续时间的黑色段，则会将带有开始和结束时间戳记以及持续时间的行打印到带有级别信息的日志中。 另外，每帧打印一条带调试级别的日志行，显示该帧检测到的黑色量。
+
+过滤器还将键为 lavfi.black_start 的元数据附加到黑色段的第一帧，并将键为 lavfi.black_end 的元数据附加到黑色段结束后的第一帧。该值是帧的时间戳。无论指定的最短持续时间如何，都会添加此元数据。
+
 ### 参数
 
+- black_min_duration, d 设置检测到的最小黑屏持续时间（以秒为单位），必须是非负浮点数，默认 2.0
+- picture_black_ratio_th, pic_th 设置用于考虑图片“黑色”的阈值，表示比率的最小值：`nb_black_pixels / nb_pixels`，超过该阈值即认为是黑屏，默认 0.98
+- pixel_black_th, pix_th 设置用于考虑像素“黑色”的阈值。阈值表示将像素视为“黑色”的最大像素亮度值。 提供的值根据以下公式缩放：`absolute_threshold = luminance_minimum_value + pixel_black_th * luminance_range_size`，`luminance_range_size和luminance_minimum_value` 取决于输入的视频格式，YUV 全范围格式的范围是[0-255]，YUV 非全范围格式的范围是[16-235]。默认 0.10
 
 ### 示例
 
 ```python
-
+_ = input(src).blackdetect(d=2, pix_th=0.00).output(dst).run()
 ```
 
 ```
-
+ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]blackdetect=d=2:pix_th=0.0[tag0]" -map [tag0] testdata\media\v0_blackdetect.mp4 -y -hide_banner
+[0.3799s]
 ```
 
 #### 对比
 
-[视频对比链接]
+只是打印了信息和写入了元数据，输出视频与原视频肉眼看无差别。
 
 ## 12. blackframe
 
 > https://ffmpeg.org/ffmpeg-filters.html#blackframe
 
+检测全黑的帧。 输出行包括检测到的帧的帧号，黑度百分比，文件中的位置或 -1 以及以秒为单位的时间戳。
+
+为了显示输出行，至少将日志级别设置为 AV_LOG_INFO 值。
+
+此过滤器导出帧元数据 lavfi.blackframe.pblack。该值表示图片中低于阈值的像素百分比。
 
 ### 参数
+
+- amount 必须低于阈值的像素百分比；默认为 98
+- threshold 阈值，低于该阈值将被视为黑色；默认为 32
 
 
 ### 示例
 
 ```python
-
+_ = input(src).blackframe(amount=95, threshold=24).output(dst).run()
 ```
 
 ```
+ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]blackframe=amount=95:threshold=24[tag0]" -map [tag0] testdata\media\v0_blackframe.mp4 -y -hide_banner
+[0.8265s]
+```
 
+#### 对比
+
+只是打印了信息和写入了元数据，输出视频与原视频肉眼看无差别。
+
+## 13. blend
+
+> https://ffmpeg.org/ffmpeg-filters.html#blend
+
+将两个视频帧混合在一起。输入两个视频流，第一个输入作为上层帧，第二个输入作为底层帧，控制底层和上层帧显示的权重。
+
+`tblend` 从单个流中获取两个连续的帧，并输出将新帧混合到旧帧上获得的结果。
+
+### 参数
+
+- c0_mode
+- c1_mode
+- c2_mode
+- c3_mode
+- all_mode 为特定的像素分量或所有像素分量设置混合模式。默认 normal。有效的模式有：
+
+  - ‘addition’
+  - ‘grainmerge’
+  - ‘and’
+  - ‘average’
+  - ‘burn’
+  - ‘darken’
+  - ‘difference’
+  - ‘grainextract’
+  - ‘divide’
+  - ‘dodge’
+  - ‘freeze’
+  - ‘exclusion’
+  - ‘extremity’
+  - ‘glow’
+  - ‘hardlight’
+  - ‘hardmix’
+  - ‘heat’
+  - ‘lighten’
+  - ‘linearlight’
+  - ‘multiply’
+  - ‘multiply128’
+  - ‘negation’
+  - ‘normal’
+  - ‘or’
+  - ‘overlay’
+  - ‘phoenix’
+  - ‘pinlight’
+  - ‘reflect’
+  - ‘screen’
+  - ‘softlight’
+  - ‘subtract’
+  - ‘vividlight’
+  - ‘xor’
+
+- c0_opacity
+- c1_opacity
+- c2_opacity
+- c3_opacity
+- all_opacity 设置特定像素组件或所有像素组件的混合不透明度。 仅与像素成分混合模式结合使用。
+
+- c0_expr
+- c1_expr
+- c2_expr
+- c3_expr
+- all_expr 设置特定像素分量或所有像素分量的混合表达式。 如果设置了相关的模式选项，则将忽略。表示式可用变量：
+
+  - N 过滤后的帧的序号，从 0 开始
+  - X
+  - Y 当前样本的坐标
+  - W
+  - H 当前过滤通道的宽度和高度
+  - SW
+  - SH 被过滤通道的宽度和高度比例。 它是当前通道尺寸与亮度通道尺寸之间的比率，例如 对于 yuv420p 帧，亮度通道的值为 1,1，色度通道的值为 0.5,0.5
+  - T 当前帧的时间，以秒为单位
+  - TOP 第一个视频帧（顶层）当前位置的像素分量值
+  - BOTTOM 第二个视频帧（底层）当前位置的像素分量值
+
+`blend` 支持 `framesync` 参数。
+
+### 示例
+
+### 在 4 秒内从底层过渡到顶层
+
+```python
+_ = vfilters.blend(in1, in2, all_expr='A*(if(gte(T,4),1,T/4))+B*(1-(if(gte(T,4),1,T/4)))').output(dst).run()
+```
+
+```
+ffmpeg -i testdata\media\0.mp4 -i testdata\media\1.mp4 -filter_complex "[0][1]blend=all_expr=A*(if(gte(T\,4)\,1\,T/4))+B*(1-(if(gte(T\,4)\,1\,T/4)))[tag0]" -map [tag0] testdata\media\v0_v1_blend_1.mp4 -y -hide_banner
+[1.6540s]
 ```
 
 #### 对比
 
 [视频对比链接]
 
-## 13. blend
-
-> https://ffmpeg.org/ffmpeg-filters.html#blend
-
-
-### 参数
-
-
-### 示例
+### 从顶层到底层的线性水平过渡
 
 ```python
-
+_ = vfilters.blend(in1, in2, all_expr='A*(X/W)+B*(1-X/W)').output(dst).run()
 ```
 
 ```
+ffmpeg -i testdata\media\0.mp4 -i testdata\media\1.mp4 -filter_complex "[0][1]blend=all_expr=A*(X/W)+B*(1-X/W)[tag0]" -map [tag0] testdata\media\v0_v1_blend_2.mp4 -y -hide_banner
+[2.4407s]
+```
 
+#### 对比
+
+[视频对比链接]
+
+### 1x1 棋盘格效果
+
+```python
+_ = vfilters.blend(in1, in2, all_expr='if(eq(mod(X,2),mod(Y,2)),A,B)').output(dst).run()
+```
+
+```
+ffmpeg -i testdata\media\0.mp4 -i testdata\media\1.mp4 -filter_complex "[0][1]blend=all_expr=if(eq(mod(X\,2)\,mod(Y\,2))\,A\,B)[tag0]" -map [tag0] testdata\media\v0_v1_blend_3.mp4 -y -hide_banner
+[0.8931s]
+```
+
+#### 对比
+
+[视频对比链接]
+
+### 从右边揭开效果
+
+```python
+_ = vfilters.blend(in1, in2, all_expr='if(gte(N*SW+X*T,W),A,B)').output(dst).run()
+```
+
+```
+ffmpeg -i testdata\media\0.mp4 -i testdata\media\1.mp4 -filter_complex "[0][1]blend=all_expr=if(gte(N*SW+X*T\,W)\,A\,B)[tag0]" -map [tag0] testdata\media\v0_v1_blend_4.mp4 -y -hide_banner
+[2.3491s]
+```
+
+#### 对比
+
+[视频对比链接]
+
+### 从上边揭开效果
+
+```python
+_ = vfilters.blend(in1, in2, all_expr='if(gte(Y-N*SH*T,0),A,B)').output(dst).run()
+```
+
+```
+ffmpeg -i testdata\media\0.mp4 -i testdata\media\1.mp4 -filter_complex "[0][1]blend=all_expr=if(gte(Y-N*SH*T\,0)\,A\,B)[tag0]" -map [tag0] testdata\media\v0_v1_blend_5.mp4 -y -hide_banner
+[0.9813s]
+```
+
+#### 对比
+
+[视频对比链接]
+
+### 从右下角揭开效果
+
+```python
+_ = vfilters.blend(in1, in2, all_expr='if(gte(T*SH*40+Y*T,H)*gte((T*40*SW+X)*W/H,W),A,B)').output(dst).run()
+```
+
+```
+ffmpeg -i testdata\media\0.mp4 -i testdata\media\1.mp4 -filter_complex "[0][1]blend=all_expr=if(gte(T*SH*40+Y*T\,H)*gte((T*40*SW+X)*W/H\,W)\,A\,B)[tag0]" -map [tag0] testdata\media\v0_v1_blend_6.mp4 -y -hide_banner
+[1.8537s]
+```
+
+#### 对比
+
+[视频对比链接]
+
+### 对角显示
+
+```python
+_ = vfilters.blend(in1, in2, all_expr='if(gt(X,Y*(W/H)),A,B)').output(dst).run()
+```
+
+```
+ffmpeg -i testdata\media\0.mp4 -i testdata\media\1.mp4 -filter_complex "[0][1]blend=all_expr=if(gt(X\,Y*(W/H))\,A\,B)[tag0]" -map [tag0] testdata\media\v0_blend.mp4 -y -hide_banner
+[0.8858s]
+```
+
+#### 对比
+
+[视频对比链接]
+
+### 显示当前帧和上一帧之间的差异
+
+```python
+_ = in1.tblend(all_mode="grainextract").output(dst).run()
+```
+
+```
+ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]tblend=all_mode=grainextract[tag0]" -map [tag0] testdata\media\v0_v1_blend_8.mp4 -y -hide_banner
+[0.4555s]
 ```
 
 #### 对比
