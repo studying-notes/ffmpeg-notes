@@ -1001,62 +1001,101 @@ ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex 
 
 > https://ffmpeg.org/ffmpeg-filters.html#colorcontrast
 
+调整 RGB 组件之间的颜色对比度。
 
 ### 参数
 
+- rc 设置红-青对比度。默认值为 0.0。允许的范围是 -1.0 到 1.0。
+- gm 设置绿色-品红对比度。默认值为 0.0。允许的范围是 -1.0 到 1.0。
+- by 设置蓝-黄对比度。默认值为 0.0。允许的范围是 -1.0 到 1.0。
+- rcw
+- gmw
+- byw 通过选项值设置每个 rc 的权重 gm。默认值为 0.0。允许范围是 0.0 到 1.0。如果所有权重均为 0.0，则禁用过滤。
+- pl 设置保存亮度。默认值为 0.0。允许范围是 0.0 到 1.0。
 
 ### 示例
 
-```python
+No such filter: 'colorcontrast'
 
-```
-
-```
-
-```
-
-#### 对比
-
-[视频对比链接]
+官网英文文档虽然还有这个滤镜的说明，但最新版找不到这个滤镜，Google 也找不到这个滤镜的信息，可能已经移除？
 
 ## 26. colorcorrect
 
 > https://ffmpeg.org/ffmpeg-filters.html#colorcorrect
 
+有选择地调整彩色白平衡。 该滤镜在 YUV 色彩空间中运行。
 
 ### 参数
 
+- rl 设置红色阴影点。允许的范围是 -1.0 到 1.0。预设值为 0。
+- bl 设置蓝色阴影点。允许的范围是 -1.0 到 1.0。预设值为 0。
+- rh 设置红色高光点。允许的范围是 -1.0 到 1.0。预设值为 0。
+- bh 设置红色高光点。允许的范围是 -1.0 到 1.0。预设值为 0。
+- saturation 设置饱和度。允许范围是 -3.0 到 3.0。预设值为 1。
 
 ### 示例
 
-```python
+No such filter: 'colorcorrect'
 
-```
-
-```
-
-```
-
-#### 对比
-
-[视频对比链接]
+官网英文文档虽然还有这个滤镜的说明，但最新版找不到这个滤镜，Google 也找不到这个滤镜的信息，可能已经移除？
 
 ## 27. colorchannelmixer
 
 > https://ffmpeg.org/ffmpeg-filters.html#colorchannelmixer
 
+通过重新混合颜色通道来调整视频输入帧。
+
+该滤镜通过添加与相同像素的其他通道关联的值来修改颜色通道。 例如，如果要修改的值为红色，则输出值为：
+
+```
+red=red*rr + blue*rb + green*rg + alpha*ra
+```
 
 ### 参数
 
+- rr
+- rg
+- rb
+- ra 调整输入红色，绿色，蓝色和 Alpha 通道对输出红色通道的贡献。rr 的默认值为 1，rg，rb 和 ra 的默认值为 0。
+- gr
+- gg
+- gb
+- ga 调整输入红色，绿色，蓝色和 Alpha 通道对输出绿色通道的贡献。gg 的默认值为 1，gr，gb 和 ga 的默认值为 0。
+- br
+- bg
+- bb
+- ba 调整输入红色，绿色，蓝色和 Alpha 通道对输出蓝色通道的贡献。bb 的默认值为 1，而 br，bg 和 ba 的默认值为 0。
+- ar
+- ag
+- ab
+- aa 调整输入红色，绿色，蓝色和 Alpha 通道对输出 Alpha 通道的贡献。aa 的默认值为 1，ar，ag 和 ab 的默认值为 0。
+
+以上参数范围：[-2.0, 2.0]
+
+- pl 更改颜色时保持亮度。允许的范围是 [0.0, 1.0]。默认值为 0.0，相当于禁用。
 
 ### 示例
 
+#### 转换为灰度
+
 ```python
-
+_ = input(src).colorchannelmixer(.3, .4, .3, 0, .3, .4, .3, 0, .3, .4, .3).output(dst).run()
 ```
 
 ```
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]colorchannelmixer=0.3:0.4:0.3:0:0.3:0.4:0.3:0:0.3:0.4:0.3[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_colorchannelmixer.mp4 -y -hide_banner
+[0.4375s]
+```
 
+### 棕褐色调
+
+```python
+_ = input(src).colorchannelmixer(.393,.769,.189,0,.349,.686,.168,0,.272,.534,.131).output(dst).run()
+```
+
+```
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]colorchannelmixer=0.393:0.769:0.189:0:0.349:0.686:0.168:0:0.272:0.534:0.131[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_colorchannelmixer.mp4 -y -hide_banner
+[0.4482s]
 ```
 
 #### 对比
@@ -1067,43 +1106,47 @@ ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex 
 
 > https://ffmpeg.org/ffmpeg-filters.html#colorize
 
+在视频流上覆盖纯色。
 
 ### 参数
 
+- hue 设置色调。允许的范围是 0 到 360。默认值为 0。
+- saturation 设置色彩饱和度。允许范围是 0 到 1。默认值是 0.5。
+- lightness 设置颜色亮度。允许范围是 0 到 1。默认值为 0.5。
+- mix 设置光源亮度的混合。默认情况下设置为 1.0。允许范围是 0.0 到 1.0。
 
 ### 示例
 
-```python
+No such filter: 'colorcorrect'
 
-```
-
-```
-
-```
-
-#### 对比
-
-[视频对比链接]
+官网英文文档虽然还有这个滤镜的说明，但最新版找不到这个滤镜，可能已经移除？
 
 ## 29. colorkey
 
 > https://ffmpeg.org/ffmpeg-filters.html#colorkey
 
+RGB 色彩空间颜色键控。
 
 ### 参数
 
+- color 将被替换为透明的颜色。
+- similarity 与关键颜色的相似性百分比。0.01 仅匹配确切的键色，而 1.0 匹配所有键色。
+- blend 混合百分比。0.0 使像素完全透明或完全不透明。较高的值会导致半透明像素，而透明度越高，像素颜色与键颜色越相似。
 
 ### 示例
 
 ```python
-
+_ = input(src).colorkey(color="white", similarity=0.02, blend=0).output(dst).run()
 ```
 
 ```
-
+ffmpeg -i testdata\i3.png -filter_complex "[0]colorkey=blend=0:color=white:similarity=0.02[tag0]" -map [tag0] testdata\media\i3_colorkey.png -y -hide_banner
+[0.0732s]
 ```
 
 #### 对比
+
+黑色部分为透明。
 
 [视频对比链接]
 
@@ -1111,18 +1154,23 @@ ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex 
 
 > https://ffmpeg.org/ffmpeg-filters.html#colorhold
 
+移除除特定颜色外的所有 RGB 颜色的所有颜色信息。
 
 ### 参数
 
+- color 不会被中性灰色替代的颜色。
+- similarity 与上述颜色的相似度百分比。 0.01 仅匹配确切的键色，而 1.0 匹配所有键色。
+- blend 混合百分比。 0.0 使像素要么全灰，要么根本不灰。 值越高，保留的颜色越多。
 
 ### 示例
 
 ```python
-
+_ = input(src).colorhold(color="red", similarity=0.05, blend=0.2).output(dst).run()
 ```
 
 ```
-
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]colorhold=blend=0.2:color=red:similarity=0.05[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_colorhold.mp4 -y -hide_banner
+[0.5202s]
 ```
 
 #### 对比
@@ -1133,18 +1181,72 @@ ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex 
 
 > https://ffmpeg.org/ffmpeg-filters.html#colorlevels
 
+用电平调整视频输入帧。
 
 ### 参数
 
+rimin
+gimin
+bimin
+aimin 调整红，绿，蓝和 alpha 输入黑点。允许的选项范围为 [-1.0,1.0]。默认值是 0。
+rimax
+gimax
+bimax
+aimax 调整红，绿，蓝和 alpha 输入白点。允许的选项范围为 [-1.0,1.0]。默认值是 1。输入级别用于亮化高光 ( 亮色调 )，暗阴影 ( 暗色调 )，改变明暗色调的平衡。
+romin
+gomin
+bomin
+aomin 调整红，绿，蓝和输出黑点。允许的选项范围是 [0,1.0]。默认值是 0。
+romax
+gomax
+bomax
+aomax 调整红，绿，蓝和 alpha 输出白点。允许的选项范围是 [0,1.0]。默认值是 1。输出电平允许手动选择一个受限的输出电平范围。
 
 ### 示例
 
+#### 画面变暗
+
 ```python
-
+_ = input(src).colorlevels(rimin=0.558, gimin=0.058, bimin=0.058).output(dst).run()
 ```
 
 ```
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]colorlevels=bimin=0.058:gimin=0.058:rimin=0.558[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_colorlevels1.mp4 -y -hide_banner
+[0.4217s]
+```
 
+#### 增加对比度
+
+```python
+_ = input(src).colorlevels(rimin=0.39, gimin=0.39, bimin=0.39, rimax=0.6,
+                           gimax=0.6, bimax=0.6).output(dst).run()
+```
+
+```
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]colorlevels=bimax=0.6:bimin=0.39:gimax=0.6:gimin=0.39:rimax=0.6:rimin=0.39[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_colorlevels2.mp4 -y -hide_banner
+[1.5766s]
+```
+
+#### 画面变亮
+
+```python
+_ = input(src).colorlevels(rimax=0.602, gimax=0.602, bimax=0.602).output(dst).run()
+```
+
+```
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]colorlevels=bimax=0.602:gimax=0.602:rimax=0.602[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_colorlevels3.mp4 -y -hide_banner
+[1.5676s]
+```
+
+#### 增加明亮度
+
+```python
+_ = input(src).colorlevels(romin=0.5, gomin=0.5, bomin=0.5).output(dst).run()
+```
+
+```
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]colorlevels=bomin=0.5:gomin=0.5:romin=0.5[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_colorlevels4.mp4 -y -hide_banner
+[1.6679s]
 ```
 
 #### 对比
