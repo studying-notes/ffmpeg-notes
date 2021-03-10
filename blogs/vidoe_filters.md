@@ -694,40 +694,56 @@ ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]boxblur=chroma_power=1:chroma
 
 > https://ffmpeg.org/ffmpeg-filters.html#bwdif
 
+反交错滤波器 Bob Weaver Deinterlacing Filter。基于 yadif 运动自适应反交错，使用 w3fdif 和三次插值算法。
 
 ### 参数
 
+- mode 交错扫描模式
+  - 0, send_frame 每帧输出一帧
+  - 1, send_field 每个场输出一帧，默认
+- parity 假定输入的交错视频进行了图像场奇偶校验
+  - 0, tff 假定顶部场优先
+  - 1, bff 假定底部场优先
+  - -1, auto 自动检测场奇偶校验，默认，如果隔行扫描是未知的，或者解码器未导出此信息，则将假定顶场优先。
+- deint 指定反交错的帧
+  - 0, all 默认，全部
+  - 1, interlaced 仅反交错帧标记为隔行扫描
 
 ### 示例
 
 ```python
-
+_ = input(src).bwdif(mode=0, parity=0, deint=0).output(dst).run()
 ```
 
 ```
-
+ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]bwdif=deint=0:mode=0:parity=0[tag0]" -map [tag0] testdata\media\v0_bwdif.mp4 -y -hide_banner
+[1.5152s]
 ```
 
 #### 对比
 
-[视频对比链接]
+肉眼看不出差别。
 
 ## 17. cas
 
 > https://ffmpeg.org/ffmpeg-filters.html#cas
 
+对视频流应用对比度自适应锐化滤波器（Contrast Adaptive Sharpen）。
 
 ### 参数
 
+- strength 设置锐化强度。 0~1，预设值为0。
+- planes 设置通道。
 
 ### 示例
 
 ```python
-
+_ = input(src).cas(strength=1).output(dst).run()
 ```
 
 ```
-
+ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]cas=strength=1[tag0]" -map [tag0] testdata\media\v0_cas.mp4 -y -hide_banner
+[2.2220s]
 ```
 
 #### 对比
@@ -738,18 +754,24 @@ ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]boxblur=chroma_power=1:chroma
 
 > https://ffmpeg.org/ffmpeg-filters.html#chromahold
 
+删除除某些颜色以外的所有颜色的所有颜色信息。
 
 ### 参数
 
+- color 不会被中性色度取代的颜色。
+- similarity 与上述颜色的相似度百分比。 0.01 仅匹配确切的键色，而 1.0 匹配所有键色。
+- blend 混合百分比。 0.0 使像素要么全灰，要么根本不灰。 值越高，保留的颜色越多。
+- yuv 表示通过的颜色已经是 YUV 而不是 RGB。启用此功能后，文字颜色（如“green”或“red”）不再有意义。 这可以用来传递确切的 YUV 值作为十六进制数。
 
 ### 示例
 
 ```python
-
+_ = input(src).chromahold(color="white", similarity=0.03).output(dst).run()
 ```
 
 ```
-
+ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]chromahold=color=white:similarity=0.03[tag0]" -map [tag0] testdata\media\v0_chromahold.mp4 -y -hide_banner
+[1.6571s]
 ```
 
 #### 对比
@@ -760,18 +782,23 @@ ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]boxblur=chroma_power=1:chroma
 
 > https://ffmpeg.org/ffmpeg-filters.html#chromakey
 
+YUV 颜色空间颜色/色度键控。用途之一就是从绿幕背景视频中提取人物合成到其他视频中。
 
 ### 参数
 
+- color 将被透明取代的颜色。
+- similarity 与上述颜色的相似度百分比。 0.01 仅匹配确切的键色，而 1.0 匹配所有键色。
+- blend 混合百分比。 0.0 使像素要么全透明，要么根本不透明。 较高的值会导致半透明像素，像素的颜色越接近关键颜色的透明度越高。
+- yuv 表示通过的颜色已经是 YUV 而不是 RGB。启用此功能后，文字颜色（如“green”或“red”）不再有意义。 这可以用来传递确切的 YUV 值作为十六进制数。
 
 ### 示例
 
 ```python
-
+_ = input(src).chromakey(color="gray", similarity=0.02).output(dst).run()
 ```
 
 ```
-
+ffmpeg -i testdata\i3.png -filter_complex "[0]chromakey=color=gray:similarity=0.02[tag0]" -map [tag0] testdata\media\v1_chromakey.png -y -hide_banner
 ```
 
 #### 对比
@@ -782,41 +809,60 @@ ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]boxblur=chroma_power=1:chroma
 
 > https://ffmpeg.org/ffmpeg-filters.html#chromanr
 
+降低色度噪点。
 
 ### 参数
 
+- thres 设置平均色度值的阈值。低于该阈值的当前像素和相邻像素的 Y，U 和 V 像素分量的绝对差之和将用于平均。亮度分量保持不变，并复制到输出。默认值为 30。允许的范围是 1 到 200。
+- sizew 设置用于平均的矩形的水平半径。允许范围是 1 到 100。默认值是 5。
+- sizeh 设置用于平均的矩形的垂直半径。允许范围是 1 到 100。默认值是 5。
+- stepw 平均时设置水平步长。默认值为 1。允许的范围是 1 到 50。对加速过滤很有用。
+- steph 平均时设置垂直步长。默认值为 1。允许的范围是 1 到 50。对加速过滤很有用。
+- threy 设置 Y 阈值以平均色度值。为当前像素和近邻像素的 Y 分量之间的最大允许差异设置更好的控制。默认值为 200。允许的范围是 1 到 200。
+- threu 设置 U 阈值以平均色度值。为当前像素和近邻像素的 U 分量之间的最大允许差异设置更好的控制。默认值为 200。允许的范围是 1 到 200。
+- threv 设置 V 阈值以平均色度值。为当前像素和近邻像素的 V 分量之间的最大允许差异设置更好的控制。默认值为 200。允许的范围是 1 到 200。
 
 ### 示例
 
 ```python
-
+_ = input(src).chromanr(thres=100, sizew=20).output(dst).run()
 ```
 
 ```
-
+ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]chromanr=sizew=20:thres=100[tag0]" -map [tag0] testdata\media\v0_chromanr.mp4 -y -hide_banner
+[1.6579s]
 ```
 
 #### 对比
 
-[视频对比链接]
+差别不明显。
 
 ## 21. chromashift
 
 > https://ffmpeg.org/ffmpeg-filters.html#chromashift
 
+水平和/或垂直移动色度像素。
 
 ### 参数
 
+- cbh 设置数量以水平移动蓝色色度 chroma-blue。
+- cbv 同上垂直
+- crh 设置数量以水平移动红色色度 chroma-red。
+- crv 同上垂直
+- edge 设置边缘模式：smear, default, warp
 
 ### 示例
 
 ```python
-
+_ = input(src).chromashift(cbh=100, cbv=-100, crh=100, crv=-100).output(dst).run()
 ```
 
 ```
-
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]chromashift=cbh=100:cbv=-100:crh=100:crv=-100[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_chromashift.mp4 -y -hide_banner
+[1.2807s]
 ```
+
+> 这里开启了 Cuda 加速设置，之后也是默认开启加速。
 
 #### 对比
 
@@ -826,19 +872,45 @@ ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]boxblur=chroma_power=1:chroma
 
 > https://ffmpeg.org/ffmpeg-filters.html#ciescope
 
+显示覆盖像素的 CIE 彩色图表。
 
 ### 参数
 
+- system 设置颜色系统
+  - ‘ntsc, 470m’
+  - ‘ebu, 470bg’
+  - ‘smpte’
+  - ‘240m’
+  - ‘apple’
+  - ‘widergb’
+  - ‘cie1931’
+  - ‘rec709, hdtv’
+  - ‘uhdtv, rec2020’
+  - ‘dcip3’
+- cie 设置 CIE 系统
+  - ‘xyy’
+  - ‘ucs’
+  - ‘luv’
+- gamuts 设置要绘制的色域
+- size 设置 ciescope 大小，默认情况下设置为 512
+- intensity 设置用于将输入像素值映射到 CIE 图的强度
+- contrast 设置对比度以绘制超出主动色彩系统色域的颜色
+- corrgamma 正确显示范围的伽玛，默认启用
+- showwhite 显示 CIE 图上的白点，默认禁用
+- gamma 设置输入伽玛。 仅与 XYZ 输入色彩空间一起使用
 
 ### 示例
 
 ```python
-
+_ = input(src).ciescope(size=1024, intensity=1, contrast=1).output(dst).run()
 ```
 
 ```
-
+ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]ciescope=contrast=1:intensity=1:size=1024[tag0]" -map [tag0] testdata\media\v0_ciescope.mp4 -y -hide_banner
+[2.4198s]
 ```
+
+> 生成的视频不支持 10 bit 编码，无法进行 Cuda 加速。
 
 #### 对比
 
@@ -848,40 +920,77 @@ ffmpeg -i testdata\media\0.mp4 -filter_complex "[0]boxblur=chroma_power=1:chroma
 
 > https://ffmpeg.org/ffmpeg-filters.html#codecview
 
+可视化某些编解码器导出的信息。
+
+某些编解码器可以使用边数据或其他方式通过帧导出信息。 例如，某些基于 MPEG 的编解码器通过编解码器 flags2 选项中的 export_mvs 标志导出运动矢量。
 
 ### 参数
 
-
+- mv 设置运动矢量进行可视化
+  - ‘pf’ P-frames 前向预测
+  - ‘bf’ B-frames 前向预测
+  - ‘bb’ B-frames 后向预测
+- qp 使用色度平面显示量化参数
+- mv_type 设置运动矢量类型以使其可视化。 包括所有帧的 MV，除非 frame_type 选项指定。
+  - ‘fp’ 前向预测
+  - ‘bp’ 后向预测
+- frame_type 设置帧类型以可视化运动矢量
+  - ‘if’ I-frames
+  - ‘pf’ P-frames
+  - ‘bf’ B-frames
+ 
 ### 示例
 
 ```python
-
+_ = input(src).codecview(mv_type="fp").output(dst).run()
 ```
 
 ```
-
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]codecview=mv_type=fp[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_codecview.mp4 -y -hide_banner
+[1.7066s]
 ```
 
 #### 对比
 
-[视频对比链接]
+这个命令似乎是只属于 FFplay 的，用 FFmpeg 处理后无差别。
+
+```shell
+ffplay -flags2 +export_mvs testdata\media\0.mp4 -vf codecview
+=mv=pf+bf+bb
+```
 
 ## 24. colorbalance
 
 > https://ffmpeg.org/ffmpeg-filters.html#colorbalance
 
+修改输入框的原色（红色，绿色和蓝色）的强度。
+
+滤镜允许在阴影，中间调或高光区域中调整输入框，以实现红蓝，绿洋红或蓝黄色平衡。
+
+正调整值会将平衡移向原色，负调整值将移向互补色。
 
 ### 参数
 
+- rs
+- gs
+- bs 调整红色，绿色和蓝色阴影（最暗的像素）
+- rm
+- gm
+- bm 调整红色，绿色和蓝色中间色调（中等像素）
+- rh
+- gh
+- bh 调整红色，绿色和蓝色高光（最亮的像素），允许的选项范围为 [-1.0, 1.0]。默认值是 0
+- pl 更改色彩平衡时保持亮度， 默认设置为禁用
 
 ### 示例
 
 ```python
-
+_ = input(src).colorbalance(rs=0.3).output(dst).run()
 ```
 
 ```
-
+ffmpeg -hwaccel cuda -vcodec h264_cuvid -i testdata\media\0.mp4 -filter_complex "[0]colorbalance=rs=0.3[tag0]" -vcodec h264_nvenc -map [tag0] testdata\media\v0_colorbalance.mp4 -y -hide_banner
+[1.9180s]
 ```
 
 #### 对比
